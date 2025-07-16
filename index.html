@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#3a0ca3" />
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Todo en Uno</title>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.0/mammoth.browser.min.js"></script>
+<style>
+  :root {
+    --primary: #4361ee;
+    --primary-dark: #3a0ca3;
+    --primary-light: #4895ef;
+    --secondary: #f72585;
+    --accent: #4cc9f0;
+    --light: #f8f9fa;
+    --dark: #212529;
+    --darker: #1a1a1a;
+    --dark-gray: #2d2d2d;
+    --success: #38b000;
+    --warning: #ffaa00;
+    --danger: #ef233c;
+    --gray: #6c757d;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--darker);
+    color: var(--light);
+    line-height: 1.5;
+    min-height: 100vh;
+    padding: 1rem;
+    padding-bottom: calc(1rem + var(--safe-area-inset-bottom));
+  }
+
+  .container {
+    max-width: 100%;
+    margin: 0 auto;
+  }
+
+  h1 {
+    text-align: center;
+    margin: 1rem 0 1.5rem;
+    color: white;
+    font-size: 1.8rem;
+    font-weight: 700;
+    background: linear-gradient(to right, var(--primary), var(--secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  h2 {
+    color: var(--accent);
+    margin-bottom: 1.2rem;
+    text-align: center;
+    font-size: 1.4rem;
+    font-weight: 600;
+  }
+
+  /* Pestañas - Estilo mejorado para móviles */
+  .tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tab-button {
+    padding: 0.8rem 1rem;
+    background: var(--dark-gray);
+    border: none;
+    cursor: pointer;
+    font-weight: 500;
+    border-radius: var(--border-radius);
+    color: var(--light);
+    transition: var(--transition);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    flex: 0 0 auto;
+    min-width: 120px;
+    text-align: center;
+    font-size: 0.9rem;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .tab-button:hover {
+    transform: translateY(-2px);
+  }
+
+  .tab-button.active {
+    background: var(--primary);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+  }
+
+  .tab-button.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    background: white;
+    border-radius: 0 0 3px 3px;
+  }
+
+  /* Contenido de pestañas */
+  .tab-content {
+    background: var(--dark-gray);
+    border-radius: var(--border-radius);
+    padding: 1.2rem;
+    display: none;
+    box-shadow: var(--box-shadow);
+    animation: fadeIn 0.3s ease;
+    margin-bottom: 1.5rem;
+    color: var(--light);
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* Calculadoras - Diseño optimizado para móviles */
+  .calculator {
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--dark-gray);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    box-shadow: var(--box-shadow);
+  }
+
+  .calculator-display {
+    width: 100%;
+    height: 70px;
+    margin-bottom: 1rem;
+    padding: 0.8rem;
+    font-size: 1.8rem;
+    text-align: right;
+    border: 2px solid #444;
+    border-radius: var(--border-radius);
+    background: #333;
+    color: var(--light);
+    font-family: 'Roboto Mono', monospace;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .calculator-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.6rem;
+    touch-action: manipulation;
+  }
+
+  .calculator-btn {
+    padding: 0.8rem;
+    font-size: 1.2rem;
+    border: none;
+    border-radius: var(--border-radius);
+    background: #444;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 500;
+    color: white;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .calculator-btn:active {
+    transform: scale(0.95);
+  }
+
+  .calculator-btn.operator {
+    background: var(--primary);
+    color: white;
+  }
+
+  .calculator-btn.operator:active {
+    background: var(--primary-dark);
+  }
+
+  .calculator-btn.equals {
+    background: var(--success);
+    color: white;
+    grid-column: span 2;
+  }
+
+  .calculator-btn.clear {
+    background: var(--danger);
+    color: white;
+  }
+
+  .calculator-btn.function {
+    background: var(--warning);
+    color: white;
+    font-size: 1rem;
+  }
+
+  /* Pomodoro - Diseño mejorado para móviles */
+  .pomodoro-container {
+    max-width: 100%;
+    margin: 0 auto;
+    text-align: center;
+    background: var(--dark-gray);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+  }
+
+  .pomodoro-input {
+    margin-bottom: 1.2rem;
+  }
+
+  .pomodoro-input label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--light);
+    font-size: 0.95rem;
+  }
+
+  .pomodoro-input input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #444;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    transition: var(--transition);
+    background: #333;
+    color: white;
+    text-align: center;
+  }
+
+  .pomodoro-input input:focus {
+    border-color: var(--primary);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+  }
+
+  .timer-display {
+    font-size: 3.5rem;
+    font-weight: bold;
+    margin: 1.2rem 0;
+    color: var(--accent);
+    font-family: 'Roboto Mono', monospace;
+    letter-spacing: -2px;
+  }
+
+  .pomodoro-status {
+    font-size: 1.2rem;
+    margin-bottom: 1.2rem;
+    color: var(--light);
+    font-weight: 500;
+  }
+
+  .pomodoro-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+  }
+
+  .pomodoro-btn {
+    padding: 0.8rem 1.5rem;
+    border: none;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    min-width: 100px;
+    flex: 1;
+  }
+
+  .pomodoro-btn.start {
+    background: var(--success);
+    color: white;
+  }
+
+  .pomodoro-btn.pause {
+    background: var(--warning);
+    color: white;
+  }
+
+  .pomodoro-btn.stop {
+    background: var(--danger);
+    color: white;
+  }
+
+  .pomodoro-btn:active {
+    transform: scale(0.95);
+  }
+
+  .pomodoro-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Conversor - Diseño móvil optimizado */
+  .converter-container {
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--dark-gray);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+  }
+
+  .converter-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 1.2rem;
+  }
+
+  .converter-row label {
+    font-weight: 500;
+    color: var(--light);
+    font-size: 0.95rem;
+  }
+
+  .converter-row select,
+  .converter-row input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 2px solid #444;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    background: #333;
+    color: white;
+  }
+
+  .converter-btn {
+    display: block;
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--primary);
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    font-weight: 600;
+    margin-top: 0.8rem;
+  }
+
+  .converter-btn:active {
+    background: var(--primary-dark);
+    transform: scale(0.98);
+  }
+
+  .converter-result {
+    margin-top: 1.2rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-align: center;
+    padding: 0.8rem;
+    background: rgba(76, 201, 240, 0.1);
+    border-radius: var(--border-radius);
+  }
+
+  /* Agenda - Diseño móvil */
+  .agenda-container {
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--dark-gray);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+  }
+
+  #agendaForm {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  #agendaTask {
+    flex-grow: 1;
+    padding: 0.8rem;
+    font-size: 1rem;
+    border-radius: var(--border-radius);
+    border: 2px solid #444;
+    background: #333;
+    color: white;
+  }
+
+  #agendaForm button {
+    background: var(--primary);
+    border: none;
+    padding: 0 1.2rem;
+    font-weight: 600;
+    font-size: 1rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    color: white;
+    transition: var(--transition);
+    min-width: 80px;
+  }
+
+  #agendaForm button:active {
+    background: var(--primary-dark);
+    transform: scale(0.98);
+  }
+
+  #taskList {
+    list-style: none;
+    margin-top: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+    padding-left: 0;
+    scrollbar-width: thin;
+  }
+
+  #taskList li {
+    padding: 0.8rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--border-radius);
+    background: #2b2b2b;
+    transition: background 0.2s;
+    font-size: 0.95rem;
+  }
+
+  #taskList li:active {
+    background: var(--primary);
+  }
+
+  /* PDF Resumidor - Diseño móvil */
+  .pdf-summarizer {
+    max-width: 100%;
+    margin: 0 auto;
+    background: var(--dark-gray);
+    border-radius: var(--border-radius);
+    padding: 1.5rem;
+    box-shadow: var(--box-shadow);
+    color: var(--light);
+  }
+
+  .pdf-upload-area {
+    border: 2px dashed var(--primary);
+    padding: 1.5rem;
+    text-align: center;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    position: relative;
+    color: var(--primary);
+    user-select: none;
+    transition: var(--transition);
+  }
+
+  .pdf-upload-area:active {
+    background: rgba(67, 97, 238, 0.1);
+    transform: scale(0.98);
+  }
+
+  .pdf-upload-icon {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .pdf-upload-text {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .pdf-upload-hint {
+    font-size: 0.85rem;
+    color: var(--gray);
+  }
+
+  .pdf-summary-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .pdf-summary-controls select {
+    padding: 0.7rem;
+    border-radius: var(--border-radius);
+    border: none;
+    font-size: 1rem;
+    background: #333;
+    color: white;
+    cursor: pointer;
+    flex: 1;
+    min-width: 150px;
+  }
+
+  .pdf-summary-controls button {
+    padding: 0.7rem 1.2rem;
+    background: var(--secondary);
+    border: none;
+    border-radius: var(--border-radius);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    flex: 1;
+  }
+
+  .pdf-summary-controls button:active {
+    background: #c11473;
+    transform: scale(0.98);
+  }
+
+  .pdf-summary-result {
+    background: #222;
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    min-height: 120px;
+    white-space: pre-wrap;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    overflow-y: auto;
+    max-height: 300px;
+  }
+
+  /* Animación fadeIn */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Scrollbar para listas */
+  #taskList::-webkit-scrollbar,
+  .pdf-summary-result::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  #taskList::-webkit-scrollbar-thumb,
+  .pdf-summary-result::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: var(--border-radius);
+  }
+
+  /* Mejoras específicas para iOS */
+  @supports (-webkit-touch-callout: none) {
+    .calculator-btn,
+    .pomodoro-btn,
+    .converter-btn,
+    #agendaForm button,
+    .pdf-summary-controls button {
+      transition: none;
+    }
+  }
+
+  /* Efecto de carga */
+  .loading {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    animation: loading 1.5s infinite;
+  }
+  
+  @keyframes loading {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  /* Notificación toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--primary);
+    color: white;
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    max-width: 90%;
+    text-align: center;
+  }
+  
+  .toast.show {
+    opacity: 1;
+  }
+
+  /* Media queries para tablets */
+  @media (min-width: 600px) {
+    .container {
+      max-width: 600px;
+    }
+    
+    h1 {
+      font-size: 2.2rem;
+    }
+    
+    h2 {
+      font-size: 1.6rem;
+    }
+    
+    .calculator-display {
+      height: 90px;
+      font-size: 2.2rem;
+    }
+    
+    .calculator-btn {
+      font-size: 1.4rem;
+      padding: 1rem;
+    }
+    
+    .calculator-btn.function {
+      font-size: 1.1rem;
+    }
+    
+    .timer-display {
+      font-size: 4.5rem;
+    }
+    
+    .pomodoro-btn {
+      font-size: 1.1rem;
+      padding: 1rem 1.8rem;
+    }
+    
+    .pdf-summary-result {
+      max-height: 400px;
+    }
+    
+    #taskList {
+      max-height: 400px;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Todo en Uno</h1>
+
+  <div class="tabs">
+    <button class="tab-button active" data-tab="1">Calculadora</button>
+    <button class="tab-button" data-tab="2">Científica</button>
+    <button class="tab-button" data-tab="3">Pomodoro</button>
+    <button class="tab-button" data-tab="4">Conversor</button>
+    <button class="tab-button" data-tab="5">Agenda</button>
+    <button class="tab-button" data-tab="6">Resumidor</button>
+  </div>
+
+  <!-- Calculadora Básica -->
+  <div id="tab1" class="tab-content active">
+    <div class="calculator">
+      <input type="text" id="basicDisplay" class="calculator-display" readonly />
+      <div class="calculator-buttons">
+        <button class="calculator-btn" data-value="7">7</button>
+        <button class="calculator-btn" data-value="8">8</button>
+        <button class="calculator-btn" data-value="9">9</button>
+        <button class="calculator-btn operator" data-value="/">÷</button>
+
+        <button class="calculator-btn" data-value="4">4</button>
+        <button class="calculator-btn" data-value="5">5</button>
+        <button class="calculator-btn" data-value="6">6</button>
+        <button class="calculator-btn operator" data-value="*">×</button>
+
+        <button class="calculator-btn" data-value="1">1</button>
+        <button class="calculator-btn" data-value="2">2</button>
+        <button class="calculator-btn" data-value="3">3</button>
+        <button class="calculator-btn operator" data-value="-">−</button>
+
+        <button class="calculator-btn clear" data-action="clear">C</button>
+        <button class="calculator-btn" data-value="0">0</button>
+        <button class="calculator-btn equals" data-action="equals">=</button>
+        <button class="calculator-btn operator" data-value="+">+</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Calculadora Científica -->
+  <div id="tab2" class="tab-content">
+    <div class="calculator">
+      <input type="text" id="sciDisplay" class="calculator-display" readonly />
+      <div class="calculator-buttons">
+        <button class="calculator-btn" data-value="7">7</button>
+        <button class="calculator-btn" data-value="8">8</button>
+        <button class="calculator-btn" data-value="9">9</button>
+        <button class="calculator-btn operator" data-value="/">÷</button>
+
+        <button class="calculator-btn" data-value="4">4</button>
+        <button class="calculator-btn" data-value="5">5</button>
+        <button class="calculator-btn" data-value="6">6</button>
+        <button class="calculator-btn operator" data-value="*">×</button>
+
+        <button class="calculator-btn" data-value="1">1</button>
+        <button class="calculator-btn" data-value="2">2</button>
+        <button class="calculator-btn" data-value="3">3</button>
+        <button class="calculator-btn operator" data-value="-">−</button>
+
+        <button class="calculator-btn clear" data-action="clear">C</button>
+        <button class="calculator-btn" data-value="0">0</button>
+        <button class="calculator-btn equals" data-action="equals">=</button>
+        <button class="calculator-btn operator" data-value="+">+</button>
+
+        <!-- Funciones científicas -->
+        <button class="calculator-btn function" data-func="sin">sin</button>
+        <button class="calculator-btn function" data-func="cos">cos</button>
+        <button class="calculator-btn function" data-func="tan">tan</button>
+        <button class="calculator-btn function" data-func="log">log</button>
+
+        <button class="calculator-btn function" data-func="sqrt">√</button>
+        <button class="calculator-btn function" data-func="pow2">x²</button>
+        <button class="calculator-btn function" data-func="pow3">x³</button>
+        <button class="calculator-btn function" data-func="pi">π</button>
+
+        <button class="calculator-btn function" data-func="exp">eˣ</button>
+        <button class="calculator-btn function" data-func="abs">|x|</button>
+        <button class="calculator-btn function" data-func="fact">n!</button>
+        <button class="calculator-btn function" data-func="neg">+/-</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pomodoro -->
+  <div id="tab3" class="tab-content">
+    <div class="pomodoro-container">
+      <h2>Pomodoro Timer</h2>
+      <div class="pomodoro-input">
+        <label for="workDuration">Trabajo (min):</label>
+        <input type="number" id="workDuration" value="25" min="1" max="120" />
+      </div>
+      <div class="pomodoro-input">
+        <label for="breakDuration">Descanso (min):</label>
+        <input type="number" id="breakDuration" value="5" min="1" max="60" />
+      </div>
+      <div class="timer-display" id="pomodoroTimer">25:00</div>
+      <div class="pomodoro-status" id="pomodoroStatus">Listo</div>
+      <div class="pomodoro-buttons">
+        <button class="pomodoro-btn start" id="pomodoroStartBtn">Iniciar</button>
+        <button class="pomodoro-btn pause" id="pomodoroPauseBtn" disabled>Pausar</button>
+        <button class="pomodoro-btn stop" id="pomodoroStopBtn" disabled>Detener</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Conversor -->
+  <div id="tab4" class="tab-content">
+    <div class="converter-container">
+      <h2>Conversor</h2>
+      <div class="converter-row">
+        <label for="conversionType">Tipo:</label>
+        <select id="conversionType">
+          <option value="length">Longitud</option>
+          <option value="weight">Peso</option>
+          <option value="temperature">Temperatura</option>
+          <option value="area">Área</option>
+          <option value="volume">Volumen</option>
+        </select>
+      </div>
+      <div class="converter-row">
+        <label for="inputValue">Valor:</label>
+        <input type="number" id="inputValue" placeholder="Introduce valor" />
+      </div>
+      <div class="converter-row">
+        <label for="fromUnit">De:</label>
+        <select id="fromUnit"></select>
+      </div>
+      <div class="converter-row">
+        <label for="toUnit">A:</label>
+        <select id="toUnit"></select>
+      </div>
+      <button class="converter-btn" id="convertBtn">Convertir</button>
+      <div class="converter-result" id="conversionResult"></div>
+    </div>
+  </div>
+
+  <!-- Agenda -->
+  <div id="tab5" class="tab-content">
+    <div class="agenda-container">
+      <h2>Lista de Tareas</h2>
+      <p style="text-align: center; margin-bottom: 1rem; font-size: 0.9rem; color: var(--gray);">Toca una tarea para eliminarla</p>
+      <form id="agendaForm">
+        <input type="text" id="agendaTask" placeholder="Nueva tarea" required />
+        <button type="submit">+</button>
+      </form>
+      <ul id="taskList"></ul>
+    </div>
+  </div>
+
+  <!-- Resumidor PDF -->
+  <div id="tab6" class="tab-content">
+    <div class="pdf-summarizer">
+      <h2>Resumidor de PDF</h2>
+      <div class="pdf-upload-area" id="pdfUploadArea" tabindex="0" role="button" aria-label="Subir archivo PDF">
+        <input type="file" id="pdfFileInput" accept=".pdf" style="display:none" />
+        <div class="pdf-upload-icon">📄</div>
+        <div class="pdf-upload-text">Sube un archivo PDF</div>
+        <div class="pdf-upload-hint">Toca aquí o arrastra un archivo</div>
+      </div>
+      <div class="pdf-summary-controls">
+        <select id="summaryLength">
+          <option value="short">Corto</option>
+          <option value="medium" selected>Medio</option>
+          <option value="long">Largo</option>
+        </select>
+        <button id="summarizeBtn">Resumir</button>
+      </div>
+      <div class="pdf-summary-result" id="pdfSummaryResult">
+        <p id="summaryText">El resumen aparecerá aquí...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ================= Tabs =================
+const tabs = document.querySelectorAll('.tab-button');
+const contents = document.querySelectorAll('.tab-content');
+tabs.forEach(tab => {
+  tab.addEventListener('click', () => {
+    tabs.forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    const target = tab.dataset.tab;
+    contents.forEach(c => c.classList.remove('active'));
+    document.getElementById('tab' + target).classList.add('active');
+    
+    // Mostrar toast al cambiar de pestaña
+    showToast(`Cambiado a: ${tab.textContent.trim()}`);
+  });
+});
+
+// ================= Calculadora Básica =================
+const basicDisplay = document.getElementById('basicDisplay');
+const basicButtons = document.querySelectorAll('#tab1 .calculator-btn');
+basicButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const val = btn.dataset.value;
+    const action = btn.dataset.action;
+    if (action === 'clear') {
+      basicDisplay.value = '';
+    } else if (action === 'equals') {
+      try {
+        // Reemplaza × y ÷ con * y / para evaluación
+        const expr = basicDisplay.value.replace(/÷/g, '/').replace(/×/g, '*');
+        const result = eval(expr);
+        basicDisplay.value = result;
+      } catch {
+        basicDisplay.value = 'Error';
+        setTimeout(() => { basicDisplay.value = ''; }, 1000);
+      }
+    } else {
+      basicDisplay.value += val;
+    }
+  });
+});
+
+// ================= Calculadora Científica =================
+const sciDisplay = document.getElementById('sciDisplay');
+const sciButtons = document.querySelectorAll('#tab2 .calculator-btn');
+let sciExpression = '';
+sciButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const val = btn.dataset.value;
+    const func = btn.dataset.func;
+    const action = btn.dataset.action;
+
+    if (action === 'clear') {
+      sciExpression = '';
+      sciDisplay.value = '';
+    } else if (action === 'equals') {
+      try {
+        // Evaluar expresiones matemáticas usando Math y funciones definidas
+        const safeEval = (expr) => {
+          // Funciones matemáticas permitidas
+          const mathFuncs = {
+            sin: Math.sin,
+            cos: Math.cos,
+            tan: Math.tan,
+            log: Math.log10,
+            sqrt: Math.sqrt,
+            pow: Math.pow,
+            abs: Math.abs,
+            exp: Math.exp,
+            pi: Math.PI,
+            e: Math.E,
+            fact: (n) => {
+              if (n < 0) return NaN;
+              if (n === 0) return 1;
+              let f = 1;
+              for (let i = 1; i <= n; i++) f *= i;
+              return f;
+            }
+          };
+          // Reemplaza π con Math.PI y e con Math.E
+          expr = expr.replace(/π/g, 'Math.PI').replace(/e/g, 'Math.E');
+
+          // Reemplaza factorial
+          expr = expr.replace(/(\d+)!/g, 'fact($1)');
+
+          // Reemplaza potencias al cuadrado y cubo
+          expr = expr.replace(/(\d+)\^2/g, 'Math.pow($1,2)');
+          expr = expr.replace(/(\d+)\^3/g, 'Math.pow($1,3)');
+
+          // Evalúa la expresión de manera segura
+          return Function('fact', 'Math', 'return ' + expr)(mathFuncs.fact, Math);
+        };
+
+        const result = safeEval(sciExpression);
+        sciDisplay.value = result;
+        sciExpression = result.toString();
+      } catch {
+        sciDisplay.value = 'Error';
+        setTimeout(() => { 
+          sciDisplay.value = '';
+          sciExpression = '';
+        }, 1000);
+      }
+    } else if (func) {
+      // Funciones científicas
+      if (func === 'pi') {
+        sciExpression += 'π';
+        sciDisplay.value = sciExpression;
+      } else if (func === 'pow2') {
+        sciExpression += '^2';
+        sciDisplay.value = sciExpression;
+      } else if (func === 'pow3') {
+        sciExpression += '^3';
+        sciDisplay.value = sciExpression;
+      } else if (func === 'fact') {
+        sciExpression += '!';
+        sciDisplay.value = sciExpression;
+      } else if (func === 'neg') {
+        // Negar último número
+        if (sciExpression.startsWith('-')) {
+          sciExpression = sciExpression.substring(1);
+        } else {
+          sciExpression = '-' + sciExpression;
+        }
+        sciDisplay.value = sciExpression;
+      } else {
+        sciExpression += func + '(';
+        sciDisplay.value = sciExpression;
+      }
+    } else {
+      sciExpression += val;
+      sciDisplay.value = sciExpression;
+    }
+  });
+});
+
+// ================= Pomodoro =================
+const pomodoroTimer = document.getElementById('pomodoroTimer');
+const pomodoroStatus = document.getElementById('pomodoroStatus');
+const workInput = document.getElementById('workDuration');
+const breakInput = document.getElementById('breakDuration');
+const startBtn = document.getElementById('pomodoroStartBtn');
+const pauseBtn = document.getElementById('pomodoroPauseBtn');
+const stopBtn = document.getElementById('pomodoroStopBtn');
+
+let pomodoroInterval = null;
+let isRunning = false;
+let isWorkTime = true;
+let timeLeft = 0;
+
+function updateTimerDisplay() {
+  const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+  const seconds = (timeLeft % 60).toString().padStart(2, '0');
+  pomodoroTimer.textContent = `${minutes}:${seconds}`;
+}
+
+function startPomodoro() {
+  if (isRunning) return;
+  isRunning = true;
+  pauseBtn.disabled = false;
+  stopBtn.disabled = false;
+  workInput.disabled = true;
+  breakInput.disabled = true;
+  pomodoroStatus.textContent = isWorkTime ? 'Trabajando' : 'Descansando';
+  timeLeft = isWorkTime ? workInput.value * 60 : breakInput.value * 60;
+  updateTimerDisplay();
+
+  pomodoroInterval = setInterval(() => {
+    timeLeft--;
+    updateTimerDisplay();
+    if (timeLeft <= 0) {
+      // Notificación de cambio de estado
+      const status = isWorkTime ? '¡Hora de descansar!' : '¡Volver al trabajo!';
+      showToast(status);
+      
+      isWorkTime = !isWorkTime;
+      pomodoroStatus.textContent = isWorkTime ? 'Trabajando' : 'Descansando';
+      timeLeft = isWorkTime ? workInput.value * 60 : breakInput.value * 60;
+      updateTimerDisplay();
+    }
+  }, 1000);
+}
+
+function pausePomodoro() {
+  if (!isRunning) return;
+  isRunning = false;
+  clearInterval(pomodoroInterval);
+  pauseBtn.disabled = true;
+  pomodoroStatus.textContent += ' (Pausado)';
+}
+
+function stopPomodoro() {
+  isRunning = false;
+  clearInterval(pomodoroInterval);
+  pauseBtn.disabled = true;
+  stopBtn.disabled = true;
+  workInput.disabled = false;
+  breakInput.disabled = false;
+  isWorkTime = true;
+  timeLeft = 0;
+  pomodoroTimer.textContent = '25:00';
+  pomodoroStatus.textContent = 'Listo';
+}
+
+startBtn.addEventListener('click', startPomodoro);
+pauseBtn.addEventListener('click', pausePomodoro);
+stopBtn.addEventListener('click', stopPomodoro);
+
+// ================= Conversor =================
+const conversionType = document.getElementById('conversionType');
+const inputValue = document.getElementById('inputValue');
+const fromUnit = document.getElementById('fromUnit');
+const toUnit = document.getElementById('toUnit');
+const convertBtn = document.getElementById('convertBtn');
+const conversionResult = document.getElementById('conversionResult');
+
+const units = {
+  length: {
+    m: 1,
+    km: 1000,
+    cm: 0.01,
+    mm: 0.001,
+    inch: 0.0254,
+    ft: 0.3048,
+    yd: 0.9144,
+    mile: 1609.34,
+  },
+  weight: {
+    g: 1,
+    kg: 1000,
+    mg: 0.001,
+    lb: 453.592,
+    oz: 28.3495,
+  },
+  temperature: {
+    C: 'C',
+    F: 'F',
+    K: 'K',
+  },
+  area: {
+    'm²': 1,
+    'km²': 1000000,
+    'cm²': 0.0001,
+    'mm²': 0.000001,
+    'ft²': 0.092903,
+    'yd²': 0.836127,
+    acre: 4046.86,
+    hectare: 10000,
+  },
+  volume: {
+    'm³': 1,
+    'l': 0.001,
+    'ml': 0.000001,
+    'gal': 0.00378541,
+    'ft³': 0.0283168,
+    'in³': 0.0000163871,
+  }
+};
+
+function populateUnits(type) {
+  fromUnit.innerHTML = '';
+  toUnit.innerHTML = '';
+  if (type === 'temperature') {
+    ['C', 'F', 'K'].forEach(u => {
+      const optionFrom = document.createElement('option');
+      optionFrom.value = u;
+      optionFrom.textContent = '°' + u;
+      fromUnit.appendChild(optionFrom);
+
+      const optionTo = document.createElement('option');
+      optionTo.value = u;
+      optionTo.textContent = '°' + u;
+      toUnit.appendChild(optionTo);
+    });
+    // Configurar valores por defecto para temperatura
+    fromUnit.value = 'C';
+    toUnit.value = 'F';
+  } else {
+    Object.keys(units[type]).forEach(u => {
+      const optionFrom = document.createElement('option');
+      optionFrom.value = u;
+      optionFrom.textContent = u;
+      fromUnit.appendChild(optionFrom);
+
+      const optionTo = document.createElement('option');
+      optionTo.value = u;
+      optionTo.textContent = u;
+      toUnit.appendChild(optionTo);
+    });
+    // Configurar valores por defecto para otros tipos
+    fromUnit.value = Object.keys(units[type])[0];
+    toUnit.value = Object.keys(units[type])[1] || Object.keys(units[type])[0];
+  }
+}
+
+function convertTemperature(value, from, to) {
+  if (from === to) return value;
+  let celsius;
+  switch(from) {
+    case 'C': celsius = value; break;
+    case 'F': celsius = (value - 32) * 5/9; break;
+    case 'K': celsius = value - 273.15; break;
+  }
+  switch(to) {
+    case 'C': return celsius;
+    case 'F': return celsius * 9/5 + 32;
+    case 'K': return celsius + 273.15;
+  }
+}
+
+function convertUnits() {
+  const type = conversionType.value;
+  const val = parseFloat(inputValue.value);
+  const from = fromUnit.value;
+  const to = toUnit.value;
+  if (isNaN(val)) {
+    conversionResult.textContent = 'Introduce un valor válido.';
+    return;
+  }
+  if (type === 'temperature') {
+    const result = convertTemperature(val, from, to);
+    conversionResult.textContent = `${val} °${from} = ${result.toFixed(2)} °${to}`;
+  } else {
+    const base = units[type][from];
+    const target = units[type][to];
+    const result = val * base / target;
+    conversionResult.textContent = `${val} ${from} = ${result.toFixed(6)} ${to}`;
+  }
+}
+
+conversionType.addEventListener('change', () => {
+  populateUnits(conversionType.value);
+  conversionResult.textContent = '';
+  inputValue.value = '';
+});
+convertBtn.addEventListener('click', convertUnits);
+populateUnits(conversionType.value);
+
+// ================= Agenda =================
+const agendaForm = document.getElementById('agendaForm');
+const agendaTask = document.getElementById('agendaTask');
+const taskList = document.getElementById('taskList');
+
+function loadTasks() {
+  const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  taskList.innerHTML = '';
+  if (tasks.length === 0) {
+    const li = document.createElement('li');
+    li.textContent = 'No hay tareas aún';
+    li.style.color = 'var(--gray)';
+    li.style.textAlign = 'center';
+    li.style.pointerEvents = 'none';
+    taskList.appendChild(li);
+  } else {
+    tasks.forEach(task => {
+      const li = document.createElement('li');
+      li.textContent = task;
+      li.addEventListener('click', () => {
+        deleteTask(task);
+      });
+      taskList.appendChild(li);
+    });
+  }
+}
+
+function saveTask(task) {
+  const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  tasks.push(task);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  loadTasks();
+  showToast('Tarea agregada');
+}
+
+function deleteTask(task) {
+  let tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+  tasks = tasks.filter(t => t !== task);
+  localStorage.setItem('tasks', JSON.stringify(tasks));
+  loadTasks();
+  showToast('Tarea eliminada');
+}
+
+agendaForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const task = agendaTask.value.trim();
+  if (task) {
+    saveTask(task);
+    agendaTask.value = '';
+    agendaTask.focus();
+  }
+});
+
+loadTasks();
+
+// ================= Resumidor PDF =================
+function simpleSummarize(text, level = 'medium') {
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  let count;
+  switch (level) {
+    case 'short': count = Math.max(2, Math.floor(sentences.length * 0.1)); break;
+    case 'medium': count = Math.max(3, Math.floor(sentences.length * 0.3)); break;
+    case 'long': count = Math.max(5, Math.floor(sentences.length * 0.5)); break;
+    default: count = 5;
+  }
+  return sentences.slice(0, count).join(' ').trim();
+}
+
+async function extractTextFromPDF(file) {
+  const arrayBuffer = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  let fullText = '';
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const strings = content.items.map(item => item.str);
+    fullText += strings.join(' ') + ' ';
+  }
+  return fullText;
+}
+
+// Drag & drop functionality
+const uploadArea = document.getElementById('pdfUploadArea');
+const fileInput = document.getElementById('pdfFileInput');
+const summarizeBtn = document.getElementById('summarizeBtn');
+const summaryText = document.getElementById('summaryText');
+
+uploadArea.addEventListener('click', () => fileInput.click());
+uploadArea.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  uploadArea.style.border = '2px dashed #666';
+  uploadArea.style.background = 'rgba(67, 97, 238, 0.1)';
+});
+uploadArea.addEventListener('dragleave', () => {
+  uploadArea.style.border = '2px dashed var(--primary)';
+  uploadArea.style.background = '';
+});
+uploadArea.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadArea.style.border = '2px dashed var(--primary)';
+  uploadArea.style.background = '';
+  const file = e.dataTransfer.files[0];
+  if (file && file.type === 'application/pdf') {
+    fileInput.files = e.dataTransfer.files;
+    showToast('PDF cargado: ' + file.name);
+  } else {
+    showToast('Solo se permiten archivos PDF', 'error');
+  }
+});
+
+fileInput.addEventListener('change', () => {
+  if (fileInput.files.length > 0) {
+    showToast('PDF cargado: ' + fileInput.files[0].name);
+  }
+});
+
+summarizeBtn.addEventListener('click', async () => {
+  const file = fileInput.files[0];
+  if (!file || file.type !== 'application/pdf') {
+    showToast('Por favor sube un archivo PDF válido', 'error');
+    return;
+  }
+
+  summaryText.innerHTML = '<div class="loading">Generando resumen...</div>';
+
+  try {
+    const text = await extractTextFromPDF(file);
+    const level = document.getElementById('summaryLength').value;
+    const summary = simpleSummarize(text, level);
+    summaryText.innerHTML = summary || '<p>No se pudo generar un resumen. El PDF puede ser escaneado o no contener texto.</p>';
+    showToast('Resumen generado');
+  } catch (error) {
+    summaryText.innerHTML = '<p>Error procesando el PDF: ' + error.message + '</p>';
+    showToast('Error al procesar PDF', 'error');
+  }
+});
+
+// ================= Toast Notifications =================
+const toast = document.getElementById('toast');
+
+function showToast(message, type = 'success') {
+  toast.textContent = message;
+  toast.className = 'toast';
+  
+  // Estilos según el tipo
+  if (type === 'error') {
+    toast.style.background = 'var(--danger)';
+  } else if (type === 'warning') {
+    toast.style.background = 'var(--warning)';
+  } else {
+    toast.style.background = 'var(--primary)';
+  }
+  
+  toast.classList.add('show');
+  
+  setTimeout(() => {
+    toast.classList.remove('show');
+  }, 3000);
+}
+
+// ================= Mejoras para PWA =================
+// Verificar si estamos en un dispositivo móvil
+function isMobile() {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+}
+
+// Ajustar el viewport para iOS
+if (isMobile()) {
+  document.querySelector('meta[name="viewport"]').content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+  
+  // Prevenir zoom en inputs en iOS
+  document.addEventListener('touchstart', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT' || e.target.tagName === 'TEXTAREA') {
+      document.querySelector('meta[name="viewport"]').content = 'width=device-width, initial-scale=1, maximum-scale=10, user-scalable=yes';
+    }
+  });
+  
+  document.addEventListener('touchend', function() {
+    setTimeout(function() {
+      document.querySelector('meta[name="viewport"]').content = 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no';
+    }, 500);
+  });
+}
+
+// Prevenir el comportamiento de pull-to-refresh en móviles
+let startY;
+document.addEventListener('touchstart', function(e) {
+  startY = e.touches[0].clientY;
+}, { passive: true });
+
+document.addEventListener('touchmove', function(e) {
+  const y = e.touches[0].clientY;
+  // Si el usuario está desplazándose hacia abajo desde la parte superior
+  if (y > startY && window.scrollY <= 0) {
+    e.preventDefault();
+  }
+}, { passive: false });
+</script>
+</body>
+</html>
